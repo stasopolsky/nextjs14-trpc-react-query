@@ -1,15 +1,21 @@
-"use client";
+import UserForm from "@/components/user-form";
+import ListUsers from "@/components/list-users";
+import { dehydrate } from "@tanstack/react-query";
+import Hydrate from "@/utils/hydrate-client";
+import { createSSRHelper } from "./api/trpc/trpc-router";
 
-import { trpc } from "@/utils/trpc";
-
-export default function Home() {
-  let { data, isLoading, isFetching } = trpc.healthchecker.useQuery();
-  if (isLoading || isFetching) return <p>Loading...</p>;
+export default async function Home() {
+  const helpers = createSSRHelper();
+  await helpers.getUsers.prefetch({ limit: 10, page: 1 });
 
   return (
-    <div className="text-xl font-bold">
-      <h1>Status: {data?.status}</h1>
-      <h1>Message: {data?.message}</h1>
-    </div>
+    <Hydrate state={dehydrate(helpers.queryClient)}>
+      <main style={{ maxWidth: 1200, marginInline: "auto", padding: 20 }}>
+        <div className="w-full flex justify-center mb-8">
+          <UserForm />
+        </div>
+        <ListUsers />
+      </main>
+    </Hydrate>
   );
 }
